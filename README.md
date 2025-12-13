@@ -10,3 +10,4 @@ A Streamlit-based web application that predicts Bitcoin closing prices using an 
 
 ## Deployment
 Built using Streamlit and TensorFlow.
+
