@@ -5,11 +5,18 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 
 # --------------------------------------------------
-# PAGE CONFIG
+# PAGE CONFIG (must be FIRST Streamlit command)
 # --------------------------------------------------
 st.set_page_config(page_title="BitVision", layout="centered")
+
+# --------------------------------------------------
+# TITLE & DESCRIPTION
+# --------------------------------------------------
 st.title("BitVision – Bitcoin Price Prediction using LSTM")
-st.write("Upload Bitcoin OHLCV CSV file to predict the next Close price.")
+st.write(
+    "This web application predicts the **next Bitcoin closing price** "
+    "using a trained LSTM deep learning model."
+)
 
 # --------------------------------------------------
 # LOAD TRAINED MODEL
@@ -43,7 +50,7 @@ if uploaded_file is not None:
     df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
 
     # -----------------------------
-    # FEATURE ENGINEERING (EXACT MATCH)
+    # FEATURE ENGINEERING (EXACT MATCH WITH TRAINING)
     # -----------------------------
     df['Return'] = df['Close'].pct_change()
     df['LogReturn'] = np.log(df['Close'] / df['Close'].shift(1))
@@ -89,25 +96,35 @@ if uploaded_file is not None:
 
     X = np.array(X, dtype="float32")
 
-    # Debug shape (important)
+    # Debug shape
     st.write("Input shape to model:", X.shape)
 
     # -----------------------------
     # PREDICTION
     # -----------------------------
     prediction = model.predict(X)
-    predicted_value = prediction[-1][0]
+    predicted_scaled_value = prediction[-1][0]
+
+    # -----------------------------
+    # INVERSE SCALING (IMPORTANT PART)
+    # -----------------------------
+    dummy = np.zeros((1, scaled_data.shape[1]))
+    dummy[0, 3] = predicted_scaled_value  # Close price index = 3
+
+    inversed = scaler.inverse_transform(dummy)
+    predicted_price = inversed[0, 3]
 
     # -----------------------------
     # OUTPUT
     # -----------------------------
     st.subheader("Prediction Result")
+
     st.success(
-        f"Predicted Next Bitcoin Close Price (scaled value): {predicted_value:.4f}"
+        f"Predicted Next Bitcoin Close Price: ${predicted_price:,.2f}"
     )
 
     st.info(
-        "Prediction is shown on scaled values as per the training pipeline."
+        "The prediction is converted back to real price using inverse scaling."
     )
 
 
