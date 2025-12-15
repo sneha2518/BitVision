@@ -5,23 +5,31 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import load_model
 
 # --------------------------------------------------
-# PAGE CONFIG (must be FIRST Streamlit command)
+# PAGE CONFIG (must be first Streamlit command)
 # --------------------------------------------------
-st.set_page_config(page_title="BitVision", layout="centered")
+st.set_page_config(
+    page_title="BitVision – Bitcoin Price Prediction",
+    layout="centered"
+)
 
 # --------------------------------------------------
 # TITLE & DESCRIPTION
 # --------------------------------------------------
 st.title("BitVision – Bitcoin Price Prediction using LSTM")
 st.write(
-    "This web application predicts the **next Bitcoin closing price** "
-    "using a trained LSTM deep learning model."
+    "This application predicts the **next Bitcoin closing price** using a "
+    "deep learning **LSTM model** trained on historical OHLCV data."
 )
 
 # --------------------------------------------------
 # LOAD TRAINED MODEL
 # --------------------------------------------------
 model = load_model("bitcoin_lstm_final_model.h5")
+st.success("LSTM model loaded successfully")
+
+# Show LSTM architecture
+with st.expander("View LSTM Model Architecture"):
+    model.summary(print_fn=lambda x: st.text(x))
 
 # --------------------------------------------------
 # FILE UPLOADER
@@ -96,23 +104,29 @@ if uploaded_file is not None:
 
     X = np.array(X, dtype="float32")
 
-    # Debug shape
-    st.write("Input shape to model:", X.shape)
+    st.write("Input shape to LSTM:", X.shape)
 
     # -----------------------------
     # PREDICTION
     # -----------------------------
-    prediction = model.predict(X)
-    predicted_scaled_value = prediction[-1][0]
+    st.write("Running LSTM prediction...")
+    prediction_scaled = model.predict(X)
 
     # -----------------------------
-    # INVERSE SCALING (IMPORTANT PART)
+    # INVERSE SCALING (ONLY CLOSE PRICE)
     # -----------------------------
-    dummy = np.zeros((1, scaled_data.shape[1]))
-    dummy[0, 3] = predicted_scaled_value  # Close price index = 3
+    close_index = df.columns.get_loc("Close")
 
-    inversed = scaler.inverse_transform(dummy)
-    predicted_price = inversed[0, 3]
+    dummy = np.zeros((1, df.shape[1]))
+    dummy[0, close_index] = prediction_scaled[-1][0]
+
+    predicted_close_usd = scaler.inverse_transform(dummy)[0, close_index]
+
+    # -----------------------------
+    # USD → INR CONVERSION
+    # -----------------------------
+    USD_TO_INR = 83.0  # approximate current rate
+    predicted_close_inr = predicted_close_usd * USD_TO_INR
 
     # -----------------------------
     # OUTPUT
@@ -120,11 +134,13 @@ if uploaded_file is not None:
     st.subheader("Prediction Result")
 
     st.success(
-        f"Predicted Next Bitcoin Close Price: ${predicted_price:,.2f}"
+        f"Predicted Next Bitcoin Close Price:\n\n"
+        f"💵 **USD:** ${predicted_close_usd:,.2f}\n\n"
+        f"🇮🇳 **INR:** ₹{predicted_close_inr:,.2f}"
     )
 
     st.info(
-        "The prediction is converted back to real price using inverse scaling."
+        "The prediction is generated using an LSTM deep learning model "
+        "and converted to Indian Rupees for user convenience."
     )
-
 
