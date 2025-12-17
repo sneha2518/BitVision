@@ -74,15 +74,16 @@ today_price = st.number_input(
 # --------------------------------------------------
 if today_price > 0:
 
-    # last 29 historical rows
-    last_29 = history_df.iloc[-29:].copy()
+  # last 29 historical rows
+last_29 = history_df.iloc[-29:].copy()
 
-    # create today's row
-    new_row = last_29.iloc[-1].copy()
-    new_row['Close'] = today_price
- new_row['Close_lag1'] = last_29.iloc[-1]['Close']
+# create today's row
+new_row = last_29.iloc[-1].copy()
+new_row["Close"] = today_price
+new_row["Close_lag1"] = last_29.iloc[-1]["Close"]
 
-    sequence_df = pd.concat([last_29, new_row.to_frame().T])
+# combine to make 30-day sequence
+sequence_df = pd.concat([last_29, new_row.to_frame().T])
 
     # scale
     sequence_scaled = feature_scaler.transform(sequence_df)
@@ -113,3 +114,4 @@ st.success(
 
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+
