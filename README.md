@@ -81,13 +81,6 @@ This approach ensures both **academic validity** and **practical usability**.
 
 ---
 
-## Repository Structure
 
-app.py # Streamlit application
-bitcoin_lstm_final_model.h5 # Trained LSTM model
-feature_scaler.pkl # MinMaxScaler for all features
-close_scaler.pkl # MinMaxScaler for Close price
-history.csv # Internal historical data
-requirements.txt # Project dependencies
-README.md # Project documentation
+
 
