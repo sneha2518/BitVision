@@ -79,4 +79,6 @@ if st.button("Predict Next Day Price"):
     st.subheader("Prediction Result")
     st.success(f"Predicted Next Day Bitcoin Price: ₹ {predicted_close_inr:,.2f}")
 
-    st.info("Prediction is based
+    st.info("Prediction is based on historical patterns learned by the LSTM model.")
+    
+
