@@ -72,7 +72,7 @@ today_price = st.number_input(
 # --------------------------------------------------
 # PREDICTION LOGIC
 # --------------------------------------------------
-    if today_price > 0:
+if today_price > 0:
 
     # ... build sequence X ...
 
@@ -107,6 +107,7 @@ today_price = st.number_input(
 )
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+
 
 
 
