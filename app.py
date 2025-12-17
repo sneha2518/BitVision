@@ -32,7 +32,7 @@ LOOKBACK = 30
 # --------------------------------------------------
 # LOAD INTERNAL HISTORICAL DATA
 # --------------------------------------------------
-history_df = pd.read_csv("history.csv")
+history_df = pd.read_csv("bitcoin_small.csv")
 
 history_df = history_df[['Open', 'High', 'Low', 'Close', 'Volume']]
 
@@ -109,3 +109,4 @@ if today_price > 0:
 
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+
