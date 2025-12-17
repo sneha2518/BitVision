@@ -74,16 +74,16 @@ today_price = st.number_input(
 # --------------------------------------------------
 if today_price > 0:
 
-  # last 29 historical rows
-last_29 = history_df.iloc[-29:].copy()
+    # last 29 historical rows
+    last_29 = history_df.iloc[-29:].copy()
 
-# create today's row
-new_row = last_29.iloc[-1].copy()
-new_row["Close"] = today_price
-new_row["Close_lag1"] = last_29.iloc[-1]["Close"]
+    # create today's row
+    new_row = last_29.iloc[-1].copy()
+    new_row["Close"] = today_price
+    new_row["Close_lag1"] = last_29.iloc[-1]["Close"]
 
-# combine to make 30-day sequence
-sequence_df = pd.concat([last_29, new_row.to_frame().T])
+    # combine to make 30-day sequence
+    sequence_df = pd.concat([last_29, new_row.to_frame().T])
 
     # scale
     sequence_scaled = feature_scaler.transform(sequence_df)
@@ -94,24 +94,18 @@ sequence_df = pd.concat([last_29, new_row.to_frame().T])
     # predict
     predicted_scaled = model.predict(X)[0][0]
 
-    # inverse scale
-    predicted_price = close_scaler.inverse_transform(
+    # convert USD → INR (display only)
+    USD_TO_INR = 83.0
+    predicted_price_inr = close_scaler.inverse_transform(
         [[predicted_scaled]]
-    )[0][0]
+    )[0][0] * USD_TO_INR
 
     # output
     st.subheader("Prediction Result")
-    USD_TO_INR = 83.0  # approx conversion rate
-
-predicted_price_inr = predicted_price * USD_TO_INR
-
-st.success(
-    f"📈 Predicted Bitcoin Close Price for Tomorrow: "
-    f"**₹{predicted_price_inr:,.2f} INR**"
-)
-
+    st.success(
+        f"📈 Predicted Bitcoin Close Price for Tomorrow: "
+        f"**₹{predicted_price_inr:,.2f} INR**"
+    )
 
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
-
-
