@@ -1,84 +1,115 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import MinMaxScaler
+import joblib
 from tensorflow.keras.models import load_model
 
-# ------------------------------
+# --------------------------------------------------
 # PAGE CONFIG
-# ------------------------------
+# --------------------------------------------------
 st.set_page_config(page_title="BitVision", layout="centered")
 
 st.title("BitVision – Bitcoin Price Prediction")
-st.write("Enter the previous day's Bitcoin Close price to predict the next day's price.")
-
-# ------------------------------
-# LOAD MODEL
-# ------------------------------
-model = load_model("bitcoin_lstm_final_model.h5")
-
-LOOKBACK = 30
-FEATURES = 12   # must match training
-
-# ------------------------------
-# USER INPUT
-# ------------------------------
-prev_close = st.number_input(
-    "Enter Previous Day Bitcoin Close Price (USD)",
-    min_value=0.0,
-    value=30000.0,
-    step=100.0
+st.write(
+    "Enter **today’s Bitcoin Close price** to predict **tomorrow’s price** "
+    "using an LSTM deep learning model."
 )
 
-# ------------------------------
-# PREDICTION
-# ------------------------------
-if st.button("Predict Next Day Price"):
+st.caption(
+    "Note: LSTM models require historical context. "
+    "The application uses recent historical data internally."
+)
 
-    # Create dummy dataframe (same structure as training)
-    data = {
-        "Open": [prev_close] * LOOKBACK,
-        "High": [prev_close] * LOOKBACK,
-        "Low": [prev_close] * LOOKBACK,
-        "Close": [prev_close] * LOOKBACK,
-        "Volume": [0] * LOOKBACK,
-        "Return": [0] * LOOKBACK,
-        "LogReturn": [0] * LOOKBACK,
-        "MA_7": [prev_close] * LOOKBACK,
-        "MA_30": [prev_close] * LOOKBACK,
-        "Volatility_7": [0] * LOOKBACK,
-        "RSI": [50] * LOOKBACK,
-        "MACD": [0] * LOOKBACK,
-    }
+# --------------------------------------------------
+# LOAD MODEL & SCALERS
+# --------------------------------------------------
+model = load_model("bitcoin_lstm_final_model.h5")
+feature_scaler = joblib.load("feature_scaler.pkl")
+close_scaler = joblib.load("close_scaler.pkl")
 
-    df = pd.DataFrame(data)
+LOOKBACK = 30
 
-    # Scale
-    scaler = MinMaxScaler()
-    scaled = scaler.fit_transform(df)
+# --------------------------------------------------
+# LOAD INTERNAL HISTORICAL DATA
+# --------------------------------------------------
+history_df = pd.read_csv("history.csv")
 
-    # Reshape for LSTM
-    X = scaled.reshape(1, LOOKBACK, FEATURES)
+history_df = history_df[['Open', 'High', 'Low', 'Close', 'Volume']]
 
-    # Predict
-    prediction_scaled = model.predict(X)
+# --------------------------------------------------
+# FEATURE ENGINEERING (MATCH TRAINING)
+# --------------------------------------------------
+history_df['Return'] = history_df['Close'].pct_change()
+history_df['LogReturn'] = np.log(history_df['Close'] / history_df['Close'].shift(1))
 
-    # Inverse scale (only Close column)
-    dummy = np.zeros((1, FEATURES))
-    dummy[0, 3] = prediction_scaled[0][0]  # Close index = 3
+history_df['MA_7'] = history_df['Close'].rolling(7).mean()
+history_df['MA_30'] = history_df['Close'].rolling(30).mean()
 
-    predicted_close_usd = scaler.inverse_transform(dummy)[0][3]
+history_df['Volatility_7'] = history_df['Return'].rolling(7).std()
+history_df['Close_lag1'] = history_df['Close'].shift(1)
 
-    # USD → INR conversion
-    USD_TO_INR = 83.0
-    predicted_close_inr = predicted_close_usd * USD_TO_INR
+delta = history_df['Close'].diff()
+gain = delta.where(delta > 0, 0).rolling(14).mean()
+loss = (-delta.where(delta < 0, 0)).rolling(14).mean()
+rs = gain / (loss + 1e-9)
+history_df['RSI'] = 100 - (100 / (1 + rs))
 
-    # ------------------------------
-    # OUTPUT
-    # ------------------------------
+ema12 = history_df['Close'].ewm(span=12, adjust=False).mean()
+ema26 = history_df['Close'].ewm(span=26, adjust=False).mean()
+history_df['MACD'] = ema12 - ema26
+
+history_df = history_df.dropna()
+
+# --------------------------------------------------
+# USER INPUT
+# --------------------------------------------------
+today_price = st.number_input(
+    "Enter today’s Bitcoin Close price (USD)",
+    min_value=0.0,
+    format="%.2f"
+)
+
+# --------------------------------------------------
+# PREDICTION LOGIC
+# --------------------------------------------------
+if today_price > 0:
+
+    # last 29 historical rows
+    last_29 = history_df.iloc[-29:].copy()
+
+    # create today's row
+    new_row = last_29.iloc[-1].copy()
+    new_row['Close'] = today_price
+ new_row['Close_lag1'] = last_29.iloc[-1]['Close']
+
+    sequence_df = pd.concat([last_29, new_row.to_frame().T])
+
+    # scale
+    sequence_scaled = feature_scaler.transform(sequence_df)
+
+    # reshape for LSTM
+    X = sequence_scaled.reshape(1, LOOKBACK, sequence_scaled.shape[1])
+
+    # predict
+    predicted_scaled = model.predict(X)[0][0]
+
+    # inverse scale
+    predicted_price = close_scaler.inverse_transform(
+        [[predicted_scaled]]
+    )[0][0]
+
+    # output
     st.subheader("Prediction Result")
-    st.success(f"Predicted Next Day Bitcoin Price: ₹ {predicted_close_inr:,.2f}")
+    USD_TO_INR = 83.0  # approx conversion rate
 
-    st.info("Prediction is based on historical patterns learned by the LSTM model.")
-    
+predicted_price_inr = predicted_price * USD_TO_INR
 
+st.success(
+    f"📈 Predicted Bitcoin Close Price for Tomorrow: "
+    f"**₹{predicted_price_inr:,.2f} INR**"
+)
+
+    )
+
+else:
+    st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
