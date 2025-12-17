@@ -94,19 +94,15 @@ if today_price > 0:
     # predict
     predicted_scaled = model.predict(X)[0][0]
 
-    # convert USD → INR (display only)
-    USD_TO_INR = 83.0
-    predicted_price_inr = close_scaler.inverse_transform(
-        [[predicted_scaled]]
-    )[0][0] * USD_TO_INR
-
+ 
     # output
     st.subheader("Prediction Result")
     st.success(
         f"📈 Predicted Bitcoin Close Price for Tomorrow: "
-        f"**₹{predicted_price_inr:,.2f} INR**"
+        f"**₹{predicted_price_inr:,.2f} USD**"
     )
 
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+
 
