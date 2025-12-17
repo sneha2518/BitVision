@@ -97,4 +97,4 @@ if st.button("Predict Next Bitcoin Price"):
 
     st.caption(
         "Prediction is based on historical time-series data using an LSTM deep learning model."
-)
+    )
