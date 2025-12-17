@@ -99,10 +99,11 @@ if today_price > 0:
     st.subheader("Prediction Result")
     st.success(
         f"📈 Predicted Bitcoin Close Price for Tomorrow: "
-        f"**₹{predicted_price_inr:,.2f} USD**"
+        f"**₹{predicted_price:,.2f} USD**"
     )
 
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+
 
 
