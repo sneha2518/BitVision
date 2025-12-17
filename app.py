@@ -5,7 +5,7 @@ from tensorflow.keras.models import load_model
 
 # Load model & scaler
 model = load_model("bitcoin_lstm_final_model.h5")
-scaler = joblib.load("scaler.pkl")
+scaler = joblib.load("scaler.fit")
 
 st.title("Bitcoin Price Prediction")
 
@@ -32,5 +32,6 @@ if st.button("Predict"):
     prediction = scaler.inverse_transform(prediction_scaled)
 
     st.success(f"Predicted Bitcoin Price: {prediction[0][0]:.2f}")
+
 
 
