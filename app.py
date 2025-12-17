@@ -74,14 +74,6 @@ today_price = st.number_input(
 # --------------------------------------------------
 if today_price > 0:
 
-    # ... build sequence X ...
-
-    predicted_scaled = model.predict(X)[0][0]
-
-    predicted_price = close_scaler.inverse_transform(
-        [[predicted_scaled]]
-    )[0][0]
-
     # last 29 historical rows
     last_29 = history_df.iloc[-29:].copy()
 
@@ -93,20 +85,24 @@ if today_price > 0:
     # combine to make 30-day sequence
     sequence_df = pd.concat([last_29, new_row.to_frame().T])
 
-    # scale
+    # scale & reshape
     sequence_scaled = feature_scaler.transform(sequence_df)
-
-    # reshape for LSTM
     X = sequence_scaled.reshape(1, LOOKBACK, sequence_scaled.shape[1])
 
-    # output
-    st.subheader("Prediction Result")
-  st.success(
-    f"📈 Predicted Bitcoin Close Price for Tomorrow: "
-    f"**{predicted_price:,.2f}**"
-)
+    # predict
+    predicted_scaled = model.predict(X)[0][0]
+
+    predicted_price = close_scaler.inverse_transform(
+        [[predicted_scaled]]
+    )[0][0]
+
+    st.success(
+        f"📈 Predicted Bitcoin Close Price for Tomorrow: "
+        f"**{predicted_price:,.2f}**"
+    )
+
 else:
-    st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+    st.info("Please enter today’s Bitcoin Close price.")
 
 
 
