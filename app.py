@@ -110,8 +110,8 @@ st.success(
     f"**₹{predicted_price_inr:,.2f} INR**"
 )
 
-    )
 
 else:
     st.info("Please enter today’s Bitcoin price to get tomorrow’s prediction.")
+
 
