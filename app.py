@@ -7,12 +7,22 @@ from tensorflow.keras.models import load_model
 # --------------------------------------------------
 # PAGE CONFIG
 # --------------------------------------------------
-st.set_page_config(page_title="BitVision", layout="centered")
+st.set_page_config(
+    page_title="BitVision – Bitcoin Price Prediction",
+    layout="centered"
+)
 
-st.title("BitVision – Bitcoin Price Prediction")
+# --------------------------------------------------
+# TITLE & DESCRIPTION
+# --------------------------------------------------
+st.title("BitVision – Bitcoin Price Prediction using LSTM")
+
 st.write(
-    "This application predicts the **next Bitcoin Close price** using a trained "
-    "LSTM deep learning model."
+    """
+    This web application predicts the **next Bitcoin closing price**
+    using a **Long Short-Term Memory (LSTM)** deep learning model.
+    Upload a Bitcoin OHLCV CSV file to get the prediction.
+    """
 )
 
 # --------------------------------------------------
@@ -24,7 +34,7 @@ model = load_model("bitcoin_lstm_final_model.h5")
 # FILE UPLOADER
 # --------------------------------------------------
 uploaded_file = st.file_uploader(
-    "Upload Bitcoin OHLCV CSV file",
+    "Upload Bitcoin CSV file (Open, High, Low, Close, Volume)",
     type=["csv"]
 )
 
@@ -42,12 +52,12 @@ if uploaded_file is not None:
     st.dataframe(df.head())
 
     # -----------------------------
-    # BASE COLUMNS
+    # BASE COLUMNS (EXACT)
     # -----------------------------
     df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
 
     # -----------------------------
-    # FEATURE ENGINEERING (EXACT MATCH)
+    # FEATURE ENGINEERING (MATCH TRAINING)
     # -----------------------------
     df['Return'] = df['Close'].pct_change()
     df['LogReturn'] = np.log(df['Close'] / df['Close'].shift(1))
@@ -56,7 +66,6 @@ if uploaded_file is not None:
     df['MA_30'] = df['Close'].rolling(30).mean()
 
     df['Volatility_7'] = df['Return'].rolling(7).std()
-
     df['Close_lag1'] = df['Close'].shift(1)
 
     # RSI
@@ -77,10 +86,10 @@ if uploaded_file is not None:
     df = df.dropna()
 
     # -----------------------------
-    # SCALING (FULL FEATURES)
+    # SCALING
     # -----------------------------
-    feature_scaler = MinMaxScaler()
-    scaled_features = feature_scaler.fit_transform(df)
+    scaler = MinMaxScaler()
+    scaled_data = scaler.fit_transform(df)
 
     # -----------------------------
     # CREATE SEQUENCES
@@ -88,26 +97,33 @@ if uploaded_file is not None:
     LOOKBACK = 30
     X = []
 
-    for i in range(LOOKBACK, len(scaled_features)):
-        X.append(scaled_features[i - LOOKBACK:i])
+    for i in range(LOOKBACK, len(scaled_data)):
+        X.append(scaled_data[i - LOOKBACK:i])
 
     X = np.array(X, dtype="float32")
 
     # -----------------------------
-    # PREDICTION (SCALED)
+    # PREDICTION
     # -----------------------------
-    prediction_scaled = model.predict(X)
-    predicted_scaled_close = prediction_scaled[-1][0]
+    prediction = model.predict(X)
+    predicted_scaled = prediction[-1][0]
 
     # -----------------------------
-    # INVERSE SCALING (CLOSE PRICE ONLY)
+    # INVERSE SCALING (CLOSE PRICE)
     # -----------------------------
-    close_scaler = MinMaxScaler()
-    close_scaler.fit(df[['Close']])
+    close_index = df.columns.get_loc("Close")
 
-    predicted_close_price = close_scaler.inverse_transform(
-        [[predicted_scaled_close]]
-    )[0][0]
+    dummy = np.zeros((1, scaled_data.shape[1]))
+    dummy[0, close_index] = predicted_scaled
+
+    inversed = scaler.inverse_transform(dummy)
+    predicted_close_usd = inversed[0, close_index]
+
+    # -----------------------------
+    # USD → INR CONVERSION
+    # -----------------------------
+    USD_TO_INR = 83.0  # approximate exchange rate
+    predicted_close_inr = predicted_close_usd * USD_TO_INR
 
     # -----------------------------
     # OUTPUT
@@ -115,12 +131,9 @@ if uploaded_file is not None:
     st.subheader("Prediction Result")
 
     st.success(
-        f"Predicted Next Bitcoin Close Price: **{predicted_close_price:,.2f} USD**"
+        f"Predicted Next Bitcoin Close Price: ₹ {predicted_close_inr:,.2f} INR"
     )
 
-    st.info(
-        "The predicted value is inverse-scaled back to the original price range."
+    st.caption(
+        "Price is inverse-scaled and converted from USD to INR for better understanding."
     )
-
-else:
-    st.warning("Please upload a Bitcoin CSV file to get prediction.")
