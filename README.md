@@ -1,43 +1,58 @@
-# BitVision – Bitcoin Price Prediction using LSTM
+# 📈 BitVision – Bitcoin Price Prediction using LSTM
 
-BitVision is a deep learning–based web application that predicts the **next day’s Bitcoin closing price (in INR)** using a trained **Long Short-Term Memory (LSTM)** network.
+BitVision is a deep learning–based web application that predicts the **next day’s Bitcoin closing price (in INR)** using a trained **Long Short-Term Memory (LSTM)** model.
 
-The project demonstrates an end-to-end implementation of **financial time-series forecasting**, covering data preprocessing, feature engineering, model training, and real-world **deployment using Streamlit**.
+This project demonstrates an end-to-end pipeline for **financial time-series forecasting**, including data preprocessing, feature engineering, model training, and deployment using **Streamlit**.
 
 ---
 
-## Project Overview
+## 🚀 Live Demo
+
+(Add your Streamlit link here)
+
+---
+
+## 📌 Project Overview
 
 - **Domain:** Deep Learning, Financial Time-Series Analysis  
 - **Model Type:** LSTM (Regression)  
 - **Frameworks:** TensorFlow, Keras, Streamlit  
-- **Prediction Target:** Next-day Bitcoin Close price  
-- **Output Currency:** INR (Indian Rupees)
+- **Prediction Target:** Next-day Bitcoin closing price  
+- **Output Currency:** INR (₹)  
 
-The LSTM model captures temporal dependencies in historical Bitcoin market data to forecast future prices.
-
----
-
-## Application Functionality
-
-- User enters **today’s Bitcoin Close price**
-- The application internally uses **recent historical market data**
-- A **30-day time-series input sequence** is constructed
-- The trained **LSTM model** predicts **tomorrow’s price**
-- The predicted value is displayed in **INR**
-
-> Although the user provides only a single input, historical context is maintained internally to satisfy LSTM requirements.
+The LSTM model captures temporal dependencies in historical Bitcoin data to generate accurate future predictions.
 
 ---
 
-## Model Architecture
+## 🧠 Features
 
-- LSTM layer (64 units, return sequences = True)
-- Dropout (0.2)
-- LSTM layer (64 units)
-- Dropout (0.2)
-- Dense layer (32 units, ReLU)
-- Output layer (1 neuron)
+- 📊 Time-series prediction using LSTM  
+- 🔮 Predicts next-day Bitcoin price  
+- ⚡ Real-time user input prediction  
+- 🌐 Interactive Streamlit interface  
+- 📉 Uses multiple financial indicators  
+
+---
+
+## ⚙️ Application Workflow
+
+1. User enters today's Bitcoin closing price  
+2. System loads recent historical data  
+3. A 30-day sequence is created  
+4. Data is scaled using trained scalers  
+5. LSTM model predicts next-day price  
+6. Result is displayed in INR  
+
+---
+
+## 🧠 Model Architecture
+
+- LSTM (64 units, return_sequences=True)  
+- Dropout (0.2)  
+- LSTM (64 units)  
+- Dropout (0.2)  
+- Dense (32 units, ReLU)  
+- Output Layer (1 neuron)  
 
 **Loss Function:** Mean Squared Error (MSE)  
 **Optimizer:** Adam  
@@ -45,9 +60,9 @@ The LSTM model captures temporal dependencies in historical Bitcoin market data 
 
 ---
 
-## Feature Engineering
+## 📊 Feature Engineering
 
-The model was trained using the following features:
+The model uses the following features:
 
 - Open  
 - High  
@@ -62,25 +77,86 @@ The model was trained using the following features:
 - RSI  
 - MACD  
 
-All features are normalized using **MinMaxScaler**.  
-The same scalers used during training are reused during deployment to ensure consistency.
+All features are normalized using **MinMaxScaler**, and the same scaler is reused during deployment.
 
 ---
 
-## Deployment Logic
+## 🧠 Deployment Logic
 
-LSTM models require temporal context.  
-To enable a simple user interface while maintaining model correctness, the application:
+Since LSTM requires sequential input:
 
-1. Loads recent historical data internally  
-2. Appends today’s user-provided price  
-3. Constructs a 30-day input sequence  
-4. Predicts the next day’s Bitcoin closing price  
+1. Recent historical data is loaded internally  
+2. User input is appended  
+3. A 30-day sequence is constructed  
+4. Model predicts next-day price  
 
-This approach ensures both **academic validity** and **practical usability**.
+This ensures both:
+✔ Accurate predictions  
+✔ Simple user experience  
 
 ---
 
+## 🛠️ Tech Stack
 
+- Python  
+- TensorFlow / Keras  
+- Pandas & NumPy  
+- Scikit-learn  
+- Streamlit  
 
+---
 
+## 📂 Project Structure
+
+bitvision/
+│── app.py  
+│── model.h5  
+│── scaler.pkl  
+│── dataset/  
+│── notebook.ipynb  
+│── README.md  
+
+---
+
+## 💻 How to Run Locally
+
+1. Clone the repository:
+git clone https://github.com/sneha2518/bitvision.git
+
+2. Navigate to the folder:
+cd bitvision
+
+3. Install dependencies:
+pip install -r requirements.txt
+
+4. Run the application:
+streamlit run app.py
+
+---
+
+## 🌐 Deployment
+
+The application is deployed using **Streamlit Cloud** and is accessible via a web interface.
+
+---
+
+## 💡 Future Improvements
+
+- Improve model accuracy with advanced architectures  
+- Add real-time API data integration  
+- Enhance UI/UX design  
+- Support multiple cryptocurrencies  
+
+---
+
+## ⚠️ Disclaimer
+
+This project is for educational purposes only and should not be used for financial decision-making.
+
+---
+
+## 👩‍💻 Author
+
+Sneha Eppanapally
+
+---
