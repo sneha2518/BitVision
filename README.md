@@ -8,7 +8,7 @@ This project demonstrates an end-to-end pipeline for **financial time-series for
 
 ## 🚀 Live Demo
 
-(Add your Streamlit link here)
+https://bitvision.streamlit.app/
 
 ---
 
